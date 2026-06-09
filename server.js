@@ -43,8 +43,17 @@ app.post('/api/chat', async (req, res) => {
 // --- PREMIUM GOOGLE TTS ROUTE ---
 app.post('/api/tts', async (req, res) => {
     try {
-        const textToSpeak = req.body.text;
-        console.log("🗣️ Aawaz Banayi Jaa Rahi Hai:", textToSpeak);
+        let textToSpeak = req.body.text;
+        
+        // 🛡️ THE 5000-BYTE SAFETY SHIELD (Zero-Crash Logic)
+        // Agar text bohot lamba hai (1500 characters se zyada), toh usko kaat do
+        if (textToSpeak.length > 1500) {
+            console.log("⚠️ Text bohot lamba hai, Safety Shield activated!");
+            // Shuru ke 1500 characters lo, aur end mein ek smart voice note jod do
+            textToSpeak = textToSpeak.substring(0, 1500) + "... baaki ki detail aap screen par aasaani se padh sakte hain sir.";
+        }
+
+        console.log("🗣️ Aawaz Banayi Jaa Rahi Hai...");
 
         // Google TTS API call Backend se ho rahi hai
         const response = await fetch(`https://texttospeech.googleapis.com/v1/text:synthesize?key=${process.env.GOOGLE_TTS_API_KEY}`, {
@@ -61,7 +70,6 @@ app.post('/api/tts', async (req, res) => {
         const data = await response.json();
         
         if (data.audioContent) {
-            // Base64 Audio Frontend ko wapas bhej do
             res.json({ audio: data.audioContent });
         } else {
             console.error("TTS API Error:", data);
