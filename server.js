@@ -18,25 +18,64 @@ app.get('/', (req, res) => {
     res.send('NSavvy Backend is ALIVE and SECURE! 🚀');
 });
 
-// 3. ASLI AI ROUTE (Frontend yahan sawaal bhejega)
+// 3. ASLI AI ROUTE (The Bulletproof Split-Brain Architecture)
 app.post('/api/chat', async (req, res) => {
     try {
         const userMessage = req.body.message;
+        console.log("=== NEW REQUEST ===");
         console.log("🗣️ Sawaal aaya:", userMessage);
 
-        // Gemini 1.5 Flash (Bohot fast aur ₹0 budget ke liye best)
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" }); 
+        const model = genAI.getGenerativeModel({ 
+            model: "gemini-2.5-flash",
+            generationConfig: { responseMimeType: "application/json" }
+        }); 
         
-        // Google se jawaab mangwao
-        const result = await model.generateContent(userMessage);
-        const aiResponseText = result.response.text();
+        const prompt = `
+        You are NSavvy, a highly intelligent AI assistant.
+        The user asked: "${userMessage}"
+        
+        STRICT RULES:
+        1. Respond ONLY in valid JSON format.
+        2. "voice_summary": Create a 2-3 line short, natural summary in Hindi/Hinglish for text-to-speech. Do NOT use any markdown characters (*, #, _, etc.) here.
+        3. "full_text": Create the complete, deeply detailed answer with proper structure. Do NOT use raw unescaped newlines. Use '\\n' for line breaks.
+        
+        JSON Structure:
+        {
+            "voice_summary": "Short response here...",
+            "full_text": "Detailed response here..."
+        }
+        `;
 
-        // Frontend ko jawaab wapas bhej do
-        res.json({ reply: aiResponseText });
+        const result = await model.generateContent(prompt);
+        let aiResponseText = result.response.text();
+        
+        console.log("📥 Raw Gemini Response received.");
+
+        // 🛡️ JSON CLEANER SHIELD (Markdown cleanup)
+        aiResponseText = aiResponseText.replace(/```json/gi, '').replace(/```/g, '').trim();
+
+        // Safe Parsing with Internal Try-Catch
+        try {
+            const parsedData = JSON.parse(aiResponseText);
+            console.log("✅ Split-Brain Parsing Success!");
+
+            // Send clean structured data to Frontend
+            res.json({ 
+                reply: parsedData.full_text,     
+                summary: parsedData.voice_summary 
+            });
+        } catch (parseError) {
+            console.error("🛑 JSON Parsing Failed! Raw text was:", aiResponseText);
+            // Fallback: Agar JSON toot bhi jaye, toh app crash nahi hoga
+            res.json({
+                reply: aiResponseText,
+                summary: "Sir, data process karne mein thodi dikkat aayi hai, aap screen par padh sakte hain."
+            });
+        }
 
     } catch (error) {
-        console.error("🛑 Dimaag mein error:", error);
-        res.status(500).json({ error: "Backend dimaag mein dikkat aayi!" });
+        console.error("🛑 Global Backend Error:", error);
+        res.status(500).json({ error: "Backend dimaag mein dikkat aayi!", details: error.message });
     }
 });
 
