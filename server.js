@@ -87,45 +87,25 @@ app.post('/api/chat', async (req, res) => {
     }
 });
 
-// --- PREMIUM GOOGLE TTS ROUTE ---
+// --- 🚀 PREMIUM ₹0 TTS BYPASS ROUTE ---
 app.post('/api/tts', async (req, res) => {
     try {
-        let textToSpeak = req.body.text;
-        
-        // 🛡️ THE 5000-BYTE SAFETY SHIELD (Zero-Crash Logic)
-        // Agar text bohot lamba hai (1500 characters se zyada), toh usko kaat do
-        if (textToSpeak.length > 1500) {
-            console.log("⚠️ Text bohot lamba hai, Safety Shield activated!");
-            // Shuru ke 1500 characters lo, aur end mein ek smart voice note jod do
-            textToSpeak = textToSpeak.substring(0, 1500) + "... baaki ki detail aap screen par aasaani se padh sakte hain sir.";
-        }
+        const { text } = req.body;
+        console.log("🔊 Generating Free Premium Audio for:", text);
 
-        console.log("🗣️ Aawaz Banayi Jaa Rahi Hai...");
-
-        // Google TTS API call Backend se ho rahi hai
-        const response = await fetch(`https://texttospeech.googleapis.com/v1/text:synthesize?key=${process.env.GOOGLE_TTS_API_KEY}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                input: { text: textToSpeak },
-                // Premium Indian Hindi Voice (Wavenet)
-                voice: { languageCode: 'hi-IN', name: 'hi-IN-Wavenet-A' }, 
-                audioConfig: { audioEncoding: 'MP3' }
-            })
+        // Google ki premium aawaz download (Bina API Key ke)
+        const audioBase64 = await googleTTS.getAudioBase64(text, {
+            lang: 'hi', // 'hi' se mast Hinglish + Hindi accent aayega
+            slow: false,
+            host: 'https://translate.google.com',
+            timeout: 10000,
         });
 
-        const data = await response.json();
-        
-        if (data.audioContent) {
-            res.json({ audio: data.audioContent });
-        } else {
-            console.error("TTS API Error:", data);
-            res.status(500).json({ error: "Google ne aawaz nahi di." });
-        }
-
+        // Base64 format me frontend ko wapas bhej do
+        res.json({ audioContent: audioBase64 });
     } catch (error) {
-        console.error("🛑 Backend Voice Error:", error);
-        res.status(500).json({ error: "Aawaz banne mein dikkat aayi!" });
+        console.error("TTS Bypass Error:", error);
+        res.status(500).json({ error: 'Audio generation failed' });
     }
 });
 
